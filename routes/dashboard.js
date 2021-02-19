@@ -15,7 +15,7 @@ const fastcsv = require("fast-csv");
 const fs = require("fs");
 var PythonShell = require('python-shell');
 var CronJob = require('cron').CronJob;
-var job = new CronJob('* * * 1 * *', async function() {
+var job = new CronJob('1 * * * * *', async function() {
     console.log('You will see this message every second');
     users = await User.find({});
     users.forEach(async user => {
@@ -32,13 +32,9 @@ var job = new CronJob('* * * 1 * *', async function() {
                 if(locationObject){
                 let uv= await getWeather(locationObject.Coordinates[0],locationObject.Coordinates[1]);
                 sensor = await Sensor.findById(Sens);
-                console.log(sensor,"sens");
-                console.log(locationObject,"loc");
                 if(sensor && locationObject) {
                     sensor.uv = uv.daily[0]["uvi"];
                     await sensor.save();
-                   console.log("Foreach",locationObject);
-                    console.log('length',sensor.data.length);
                     sensor.data.splice(sensor.data.length-401, sensor.data.length).forEach( d => {
                         if (d){
                             data2.push({loc: locationObject.SiteName, sesnosr: sensor.id, air_temp: d.temperature, uv: sensor.uv, air_humidity: d.humidite, soil_temp: d.temperatureSol});           
@@ -52,7 +48,6 @@ var job = new CronJob('* * * 1 * *', async function() {
         // data2.push(sensor.data);
         // data3.push({uv:sensor.uv});  
         // data = [...data2, ...data3];
-        console.log("data before: ",data2);
     if(data2.length > 0){
         const ws = fs.createWriteStream("AI/AI.csv");
         console.log("data: ",data2);
