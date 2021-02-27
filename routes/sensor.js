@@ -109,7 +109,7 @@ router.get('/getnumberSensors', verifyToken, async (req, res) => {
 });
 
 
-router.get('/getDeviceByid/:id', verifyToken, async (req, res) => {
+router.get('/getDeviceByiddata/:id', verifyToken, async (req, res) => {
     try {
     user = await User.findById(req.userId);
     if (!user) {
@@ -119,6 +119,22 @@ router.get('/getDeviceByid/:id', verifyToken, async (req, res) => {
     if (sens){
         //console.log('your device: ',sens.data);
         return res.json(sens.data);
+    }
+} catch (e) {
+    console.log(e);
+}
+});
+
+router.get('/getDeviceByid/:id', verifyToken, async (req, res) => {
+    try {
+    user = await User.findById(req.userId);
+    if (!user) {
+        return res.json({status: "err", message: 'No User Found'});
+    }
+    sens = await Sensor.findOne({_id : req.params.id}).select('-data');
+    if (sens ){
+        //console.log('your device: ',sens.data);
+        return res.json(sens);
     }
 } catch (e) {
     console.log(e);
@@ -342,7 +358,7 @@ router.post('/remove', verifyToken, async (req, res) => {
         }
         console.log(Sens);
         console.log(Loc);
-        // Sens.deleteOne();
+        Sens.deleteOne();
         Loc = await Loc.save();
         res.json({status: "ok", message: 'Sensor Deleted'});
     } catch (e) {
