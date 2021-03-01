@@ -15,7 +15,7 @@ const fastcsv = require("fast-csv");
 const fs = require("fs");
 var PythonShell = require('python-shell');
 var CronJob = require('cron').CronJob;
-var job = new CronJob('* * * 1 * *', async function() {
+var job = new CronJob('* * * * 1 *', async function() {
     console.log('You will see this message every second');
     users = await User.find({});
     users.forEach(async user => {

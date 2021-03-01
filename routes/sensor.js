@@ -213,10 +213,6 @@ router.post('/Add', verifyToken, async (req, res) => {
         Sens = await Sensor.findById(req.body.SensorId).select('-data');
         console.log('Sens :', Sens);
         if (Sens) {
-            console.log('Sens :', Sens);
-            console.log('req.body.SensorName:', req.body.SensorName);
-            console.log('req.body.Description:', req.body.Description);
-            console.log('req.body.SensorCoordinates :', req.body.SensorCoordinates);
             Sens.name = req.body.SensorName;
             Sens.Description = req.body.Description;
             Sens.SensorCoordinates = req.body.SensorCoordinates;
@@ -236,6 +232,27 @@ router.post('/Add', verifyToken, async (req, res) => {
         console.log(e);
     }
 });
+
+router.put('/updatesens',verifyToken,async (req,res) =>
+{
+    console.log('update');
+    console.log(req.body.id);
+    try {
+        sens = await Sensor.findById(req.body.id);
+        console.log(sens);
+        if (sens.name !== req.body.name)
+        console.log(req.body.name);
+        sens.name = req.body.name;
+        if (sens.Description !== req.body.Description)
+            sens.Description = req.body.Description;
+            sens.SensorCoordinates = req.body.SensorCoordinates;
+        sens = await sens.save();
+        console.log(sens);
+        res.json({status: "ok", message: 'Device Updated'});
+    } catch(e)
+    {console.log(e)}
+});
+
 router.get('/', verifyToken, async (req, res) => {
     try {
         All_User_Locations = [];
