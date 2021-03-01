@@ -105,6 +105,28 @@ router.get('/getLocationSensByid/:id', verifyToken, async (req, res) => {
 }
 });
 
+router.put('/updateloc',verifyToken,async (req,res) =>
+{
+    console.log('update');
+    console.log(req.body.id);
+    try {
+        Loc = await Location.findById(req.body.id);
+        console.log(Loc);
+        if (Loc.SiteName !== req.body.SiteName)
+            Loc.SiteName = req.body.SiteName;
+        if (Loc.Description !== req.body.Description)
+            Loc.Description = req.body.Description;
+        console.log(Loc.Coordinates[0] === req.body.Coordinates[0]);
+        console.log(req.body.Coordinates[0]);
+        console.log(req.body.Coordinates[1]);
+            Loc.Coordinates = [req.body.Coordinates[0] , req.body.Coordinates[1] ];
+        Loc = await Loc.save();
+        console.log(Loc);
+        res.json({status: "ok", message: 'Location Updated'});
+    } catch(e)
+    {console.log(e)}
+});
+
 
 router.post('/Add',verifyToken,async (req,res) =>
 {
