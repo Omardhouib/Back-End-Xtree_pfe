@@ -491,7 +491,7 @@ function getWeither(long,lat ) {
         let data1 = '';
         // GET parameters
         const parameters = {
-            appid: process.env.key,
+            appid: "9c87aea7eb554790a776132131339754",
             lat: lat,//36.717199016072186
             lon: long,//10.215536125104649
             units: 'metric'
