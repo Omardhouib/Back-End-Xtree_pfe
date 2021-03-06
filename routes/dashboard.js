@@ -362,6 +362,25 @@ router.get('/getweather/:id', verifyToken ,async (req , res)=>{
         return res.status(400).json({status: "err", message: e.toString()});
     }
 });
+
+router.get('/getlocationdetails',verifyToken, async (req , res)=>{
+    try{
+        All_User_Locations = [];
+        user = await User.findById(req.userId);
+        for (const item of user.Location_ids) {
+            locationss = await Location.findById(item);
+            if(locationss){
+                All_User_Locations.push(locationss);  
+            }   
+        }
+        loact = All_User_Locations[0];
+        let Weather = await getWeither(loact.Coordinates[0],loact.Coordinates[1]);
+        res.json({location: loact , weather: Weather.daily});
+    }catch (e) {
+        res.json(e);
+    }
+});
+
 router.get('/getUltraV/:id', verifyToken ,async (req , res)=>{
 
     try{

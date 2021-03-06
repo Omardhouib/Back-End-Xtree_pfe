@@ -141,6 +141,22 @@ router.get('/getDeviceByid/:id', verifyToken, async (req, res) => {
 }
 });
 
+router.get('/getDevByid/:id', verifyToken, async (req, res) => {
+    try {
+    user = await User.findById(req.userId);
+    if (!user) {
+        return res.json({status: "err", message: 'No User Found'});
+    }
+    sens = await Sensor.findOne({_id : req.params.id}).select('-data');
+    if (sens && sens.SensorType !== "electrovanne"){
+        //console.log('your device: ',sens.data);
+        return res.json(sens);
+    }
+} catch (e) {
+    console.log(e);
+}
+});
+
 
 
 router.get('/getnumberLocations', verifyToken, async (req, res) => {

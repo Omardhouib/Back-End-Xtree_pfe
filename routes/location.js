@@ -50,12 +50,14 @@ router.get('/getlocation',verifyToken, async (req , res)=>{
             }
             
         }
-       
+
+
         res.json(All_User_Locations);
     }catch (e) {
         res.json(e);
     }
 });
+
 
 router.get('/getlastlocation',verifyToken, async (req , res)=>{
     try{
@@ -83,6 +85,7 @@ router.get('/getLocationByid/:id', verifyToken, async (req, res) => {
     Loc = await Location.findOne({_id : req.params.id});
     if (Loc){
         //console.log('your device: ',sens.data);
+
         return res.json(Loc);
     }
 } catch (e) {
