@@ -7,15 +7,20 @@ const router =express.Router();
 
 function SendEmail(Email, Subject ,data) {
     var transporter = nodemailer.createTransport({
-        service: 'gmail',
+        host: 'smtp.gmail.com',
+    port: 587,
+    secure: false,
         auth: {
-            user: process.env.Mailer_email,
-            pass: process.env.Mailer_pass
+            user: "dhouib60@gmail.com",
+            pass: "52002272"
+        },tls: {
+            // do not fail on invalid certs
+            rejectUnauthorized: false
         }
     });
 
     var mailOptions = {
-        from: 'SmartIrrigation',
+        from: 'SmartIrrigation<dhouib60@gmail.com>',
         to: Email,
         subject: Subject,
         text: data

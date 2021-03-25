@@ -50,8 +50,6 @@ router.get('/getlocation',verifyToken, async (req , res)=>{
             }
             
         }
-
-
         res.json(All_User_Locations);
     }catch (e) {
         res.json(e);
@@ -70,7 +68,7 @@ router.get('/getlastlocation',verifyToken, async (req , res)=>{
             }
             
         }
-        res.json(All_User_Locations[All_User_Locations.length -1]);
+        res.json(All_User_Locations[0]);
     }catch (e) {
         res.json(e);
     }

@@ -15,7 +15,7 @@ const fastcsv = require("fast-csv");
 const fs = require("fs");
 var PythonShell = require('python-shell');
 var CronJob = require('cron').CronJob;
-var job = new CronJob('* * * * 1 *', async function() {
+var job = new CronJob('* * * 1 * *', async function() {
     console.log('You will see this message every second');
     users = await User.find({});
     users.forEach(async user => {
@@ -366,16 +366,31 @@ router.get('/getweather/:id', verifyToken ,async (req , res)=>{
 router.get('/getlocationdetails',verifyToken, async (req , res)=>{
     try{
         All_User_Locations = [];
+        All_User_Sensors = [];
+        All_electro_Sensors = [];
         user = await User.findById(req.userId);
         for (const item of user.Location_ids) {
             locationss = await Location.findById(item);
             if(locationss){
                 All_User_Locations.push(locationss);  
+            }
+            for (const element of locationss.Sensor_ids) {
+                Sens = await Sensor.findById(element).select('-data');
+                console.log(Sens);
+                if (Sens) {
+                    All_User_Sensors.push(Sens);
+                }
+                if (Sens && Sens.SensorType === "Relay" ) {
+                    All_electro_Sensors.push(Sens);
+                }
             }   
         }
         loact = All_User_Locations[0];
+        locations = All_User_Locations;
+        sensors = All_User_Sensors;
+        electro = All_electro_Sensors;
         let Weather = await getWeither(loact.Coordinates[0],loact.Coordinates[1]);
-        res.json({location: loact , weather: Weather.daily});
+        res.json({weather: Weather.daily, locations: locations, sensors: sensors, Sensor: electro});
     }catch (e) {
         res.json(e);
     }
@@ -510,9 +525,10 @@ function getWeither(long,lat ) {
         let data1 = '';
         // GET parameters
         const parameters = {
-            appid: "9c87aea7eb554790a776132131339754",
+            appid: "b80536bb69d5237b24a7b213f88de284",
             lat: lat,//36.717199016072186
             lon: long,//10.215536125104649
+            dt: Date.now()+"000",
             units: 'metric'
         };
 

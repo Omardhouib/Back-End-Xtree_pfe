@@ -42,7 +42,7 @@ router.get('/getSensors', verifyToken, async (req, res) => {
            if (locationss){
                for (const element of locationss.Sensor_ids) {
             Sens = await Sensor.findById(element).select("-data");
-            if (Sens && Sens.SensorType !== "electrovanne" ) {
+            if (Sens && Sens.SensorType !== "Relay" ) {
                 All_User_Sensors.push(Sens);
             }
         }}
@@ -60,21 +60,29 @@ router.get('/getElectroSensors', verifyToken, async (req, res) => {
     try {
         All_User_Locations = [];
         All_User_Sensors = [];
+        All_User_ElectSensors = [];
+        All_User_SolSensors = [];
         user = await User.findById(req.userId);
         for (const item of user.Location_ids) {
             locationss = await Location.findById(item);
            if (locationss){
                for (const element of locationss.Sensor_ids) {
             Sens = await Sensor.findById(element).select("-data");
-            if (Sens && Sens.SensorType === "electrovanne" ) {
+            if(Sens){
                 All_User_Sensors.push(Sens);
+            }
+            if (Sens && Sens.SensorType === "Relay" ) {
+                All_User_ElectSensors.push(Sens);
+            }
+            if (Sens && Sens.SensorType === "CarteDeSol" ) {
+                All_User_SolSensors.push(Sens);
             }
         }}
             All_User_Locations.push(locationss);
         }
         console.log(All_User_Sensors);
-       // res.json({status: "ok", Locations: All_User_Locations, Sensors: All_User_Sensors});
-        res.json(All_User_Sensors);
+        res.json({Locations: All_User_Locations[0], Sensors: All_User_Sensors, Electro: All_User_ElectSensors, Sol: All_User_SolSensors[0]});
+        //res.json(All_User_Sensors);
     } catch (e) {
         res.json({message: e});
     }
@@ -141,6 +149,22 @@ router.get('/getDeviceByid/:id', verifyToken, async (req, res) => {
 }
 });
 
+router.get('/getSolDeviceByid/:id', verifyToken, async (req, res) => {
+    try {
+    user = await User.findById(req.userId);
+    if (!user) {
+        return res.json({status: "err", message: 'No User Found'});
+    }
+    sens = await Sensor.findOne({_id : req.params.id}).select('-data');
+    if (sens && sens.SensorType == "CarteDeSol" ){
+        //console.log('your device: ',sens.data);
+        return res.json(sens);
+    }
+} catch (e) {
+    console.log(e);
+}
+});
+
 router.get('/getDevByid/:id', verifyToken, async (req, res) => {
     try {
     user = await User.findById(req.userId);
@@ -148,7 +172,7 @@ router.get('/getDevByid/:id', verifyToken, async (req, res) => {
         return res.json({status: "err", message: 'No User Found'});
     }
     sens = await Sensor.findOne({_id : req.params.id}).select('-data');
-    if (sens && sens.SensorType !== "electrovanne"){
+    if (sens && sens.SensorType !== "Relay"){
         //console.log('your device: ',sens.data);
         return res.json(sens);
     }
@@ -184,6 +208,30 @@ router.get('/getnumberLocations', verifyToken, async (req, res) => {
         res.json(All_User_Locations.length);
     } catch (e) {
         res.json(e);
+    }
+});
+
+router.get('/getSensLoc', verifyToken, async (req, res) => {
+    try {
+        All_User_Locations = [];
+        All_User_Sensors = [];
+        user = await User.findById(req.userId);
+        for (const item of user.Location_ids) {
+            locationss = await Location.findById(item);
+           if (locationss){
+               for (const element of locationss.Sensor_ids) {
+            Sens = await Sensor.findById(element).select("-data");
+            if (Sens) {
+                All_User_Sensors.push(Sens);
+            }
+        }}
+            All_User_Locations.push(locationss);
+        }
+        console.log({Sensors: All_User_Sensors, Location: All_User_Locations});
+       // res.json({status: "ok", Locations: All_User_Locations, Sensors: All_User_Sensors});
+        res.json({Sensors: All_User_Sensors, Location: All_User_Locations});
+    } catch (e) {
+        res.json({message: e});
     }
 });
 
@@ -306,6 +354,8 @@ router.post('/AddRules', verifyToken, async (req, res) => {
     }
   ]
 }*/
+
+        console.log("dateeeeeee",req.body.Rules[0]);
         notif = { SMS : 0 , Email : 0 ,Push : 0};
         req.body.Rules[0].NotifSelection.forEach(item => {
             if (item.item_id === 1 )
@@ -317,7 +367,7 @@ router.post('/AddRules', verifyToken, async (req, res) => {
         });
         var timeInMillis = Date.parse(req.body.Rules[0].date) /1000;
         Sens = await Sensor.findById(req.body.SensorId).select('-data');
-        Sens.Rules[Sens.Rules.length -1 ].Status = false ;
+        //Sens.Rules[0].Status = false ;
         const rule = { Status : false , StartTime : timeInMillis , Tmax : req.body.Rules[0].TMax , Tmin : req.body.Rules[0].TMin
             , Notifications : notif , Realy_ids : req.body.Rules[0].RelaySelection};
         Sens.Rules.push(rule);
@@ -644,9 +694,10 @@ async function checkRules(rules, id, data) {
         return;
     }
     const rule = rules[rules.length - 1];
-    //console.log('rules ', rule);
+    console.log('rule ', rule);
+    console.log("rules :",rules)
     if (rule) {
-        //console.log('Sens :', rule);
+        console.log('Sens :', rule);
         //console.log('data :', data);
         //console.log('id :', id);
         if (rule.Status === false) {
@@ -655,21 +706,32 @@ async function checkRules(rules, id, data) {
         //    console.log('data.humidite ',data.humidite);
         //    console.log('rule.Tmin ',rule.Tmin);
             const now = Date.now();
-            if (rule.Tmin < data.humidite && rule.Tmax > data.humidite && rule.StartTime < now )
+            console.log("msg....")
+            console.log("humidite....",data.humidite)
+            console.log("tmax....",rule["Tmax"])
+            console.log("tmin....",rule["Tmin"])
+            console.log("starttime...",rule["StartTime"])
+            console.log("date....",now)
+            if (rule["Tmin"] < data.humidite && rule["Tmax"] > data.humidite && rule["StartTime"] < now )
             {
              /// Shared.EmailUser('fouzai.alaa@gmail.com', 'subject', 'data');
+             console.log("d5al ba3d if loula")
             const Loc = await Location.findOne({Sensor_ids: mongoose.Types.ObjectId(id)});
+            console.log("d5al ba3d if loula location",loc)
             if (!Loc) {
                 console.log('no location');
                 return ;
             }
             const U = await User.findOne({Location_ids: mongoose.Types.ObjectId(Loc._id)});
+            console.log("d5al ba3d if loula user", U)
+            console.log("d5al ba3d if loula email", U.Email)
             if (!U) {
                 console.log('no User');
                 return ;
             }
-            if (U.Notifications.Email === true)
+            if (rule["Notifications"]["Email"] == true)
             {
+                console.log("9bal email ligne 674...");
                 Shared.EmailUser(U.email, 'Relay Update ', 'Relay is open '+Loc.SiteName);
             }
             if (U.Notifications.Push === true)
@@ -677,7 +739,7 @@ async function checkRules(rules, id, data) {
               //  console.log('Push Notification ', U._id);
                 Shared.NotifyyUser('5e539d385957281f6470841d',{"icon":"success", "title" : "success" , "text" : "Relay is open "+Loc.SiteName} );
             }
-            }else if (rule.Tmax < data.humidite && rule.StartTime < now )
+            }else if (rule["Tmax"] < data.humidite && rule["StartTime"] < now )
             {
                 /// Shared.EmailUser('fouzai.alaa@gmail.com', 'subject', 'data');
                 const Loc = await Location.findOne({Sensor_ids: mongoose.Types.ObjectId(id)});
@@ -692,6 +754,7 @@ async function checkRules(rules, id, data) {
                 }
                 if (U.Notifications.Email === true)
                 {
+                    console.log("9bal email ligne 697...");
                     Shared.EmailUser(U.email, 'Relay Update ', 'Relay is closing '+Loc.SiteName);
                 }
                 if (U.Notifications.Push === true)
@@ -699,7 +762,7 @@ async function checkRules(rules, id, data) {
                  //   console.log('Push Notification ', U._id);
                     Shared.NotifyyUser('5e539d385957281f6470841d',{"icon":"success", "title" : "success" , "text" : "Relay is open "+Loc.SiteName} );
                 }
-            }else if((rule.Tmin > data.humidite || data.humidite < rule.Tmax) && rule.StartTime < now)
+            }else if((rule["Tmin"] > data.humidite || data.humidite < rule["Tmax"]) && rule["StartTime"] < now)
             {
                 console.log('2nd condition');
             }
