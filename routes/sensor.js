@@ -140,7 +140,7 @@ router.get('/getDeviceByid/:id', verifyToken, async (req, res) => {
         return res.json({status: "err", message: 'No User Found'});
     }
     sens = await Sensor.findOne({_id : req.params.id}).select('-data');
-    if (sens ){
+    if (sens.data ){
         //console.log('your device: ',sens.data);
         return res.json(sens);
     }
@@ -180,6 +180,23 @@ router.get('/getDevByid/:id', verifyToken, async (req, res) => {
     console.log(e);
 }
 });
+
+router.get('/getAllDevById/:id', verifyToken, async (req, res) => {
+    try {
+    user = await User.findById(req.userId);
+    if (!user) {
+        return res.json({status: "err", message: 'No User Found'});
+    }
+    sens = await Sensor.findOne({_id : req.params.id}).select('-data');
+    if (sens){
+        //console.log('your device: ',sens.data);
+        return res.json(sens);
+    }
+} catch (e) {
+    console.log(e);
+}
+});
+
 
 
 

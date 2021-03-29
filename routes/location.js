@@ -19,7 +19,7 @@ function verifyToken(req, res, next) {
 
     decoded=jwt.decode(req.query.token, {complete: true});
     req.userId = decoded.payload.id;
-    next()
+    next();
 }
 
 router.get('/',verifyToken, async (req , res)=>{
@@ -74,6 +74,44 @@ router.get('/getlastlocation',verifyToken, async (req , res)=>{
     }
 });
 
+router.get('/getlocdetails', verifyToken, async (req, res) => {
+    try {
+        All_User_Locations = [];
+        All_User_Sensors = [];
+        All_User_ElectSensors = [];
+        All_User_SolSensors = [];
+        user = await User.findById(req.userId);
+        for (const item of user.Location_ids) {
+            console.log("herree",req.body.id);
+            locationss = await Location.findOne({id :req.body.id});
+            console.log(locationss);
+           if (locationss){ 
+               for (const element of locationss.Sensor_ids) {
+            Sens = await Sensor.findById(element).select("-data");
+            console.log("hhhhh",Sens);
+            if(Sens){
+                All_User_Sensors.push(Sens);
+            }
+            if (Sens && Sens.SensorType === "Relay" ) {
+                All_User_ElectSensors.push(Sens);
+            }
+            if (Sens && Sens.SensorType === "CarteDeSol" ) {
+                All_User_SolSensors.push(Sens);
+            }
+        }}
+            All_User_Locations.push(locationss);
+        }
+        console.log(All_User_Sensors);
+        res.json({Locations: All_User_Locations, Sensors: All_User_Sensors, Electro: All_User_ElectSensors, Sol: All_User_SolSensors[0]});
+        //res.json(All_User_Sensors);
+    } catch (e) {
+        res.json({message: e});
+    }
+});
+
+
+
+
 router.get('/getLocationByid/:id', verifyToken, async (req, res) => {
     try {
     user = await User.findById(req.userId);
@@ -125,12 +163,12 @@ router.put('/updateloc',verifyToken,async (req,res) =>
         console.log(Loc);
         res.json({status: "ok", message: 'Location Updated'});
     } catch(e)
-    {console.log(e)}
+    {console.log(e);
+    }
 });
 
 
-router.post('/Add',verifyToken,async (req,res) =>
-{
+router.post('/Add', verifyToken, async (req, res) => {
     console.log(req.userId);
     console.log('check if location exists');
     try{
@@ -145,9 +183,10 @@ router.post('/Add',verifyToken,async (req,res) =>
                 res.json({status:"err" , message: 'Location already Exists'});
         });
         user.Location_ids.push(location._id);
-        await user.save();
-        await location.save();
-        res.json({status:"ok" , message: 'Location Added', UserData : user});
+        user = await user.save();
+        location = await location.save();
+        console.log("here");
+        return res.json({status:"ok" , message: 'Location Added', UserData : user});
     }catch (err) {
         res.json({ message:err });
     }
