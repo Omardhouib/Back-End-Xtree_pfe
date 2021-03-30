@@ -63,8 +63,8 @@ router.get('/getElectroSensors', verifyToken, async (req, res) => {
         All_User_ElectSensors = [];
         All_User_SolSensors = [];
         user = await User.findById(req.userId);
-        for (const item of user.Location_ids) {
-            locationss = await Location.findById(item);
+       
+            locationss = await Location.findOne();
            if (locationss){
                for (const element of locationss.Sensor_ids) {
             Sens = await Sensor.findById(element).select("-data");
@@ -78,17 +78,42 @@ router.get('/getElectroSensors', verifyToken, async (req, res) => {
                 All_User_SolSensors.push(Sens);
             }
         }}
-            All_User_Locations.push(locationss);
-        }
+        
         console.log(All_User_Sensors);
-        res.json({Locations: All_User_Locations[0], Sensors: All_User_Sensors, Electro: All_User_ElectSensors, Sol: All_User_SolSensors[0]});
+        res.json({Locations: locationss, Sensors: All_User_Sensors, Electro: All_User_ElectSensors, Sol: All_User_SolSensors[0]});
         //res.json(All_User_Sensors);
     } catch (e) {
         res.json({message: e});
     }
 });
 
-
+router.get('/getLocationsdetailsByid/:id', verifyToken, async (req, res) => {
+    try {
+        All_User_Sensors = [];
+        All_User_ElectSensors = [];
+        All_User_SolSensors = [];
+    user = await User.findById(req.userId);
+    if (!user) {
+        return res.json({status: "err", message: 'No User Found'});
+    }
+    Loc = await Location.findOne({_id : req.params.id});
+    if (Loc){
+        for (const element of Loc.Sensor_ids) {
+            Sens = await Sensor.findById(element).select("-data");
+            if(Sens && Sens.SensorType == "Relay"){
+                All_User_Sensors.push(Sens);
+            }
+            if (Sens && Sens.SensorType === "Relay" ) {
+                All_User_ElectSensors.push(Sens);
+            }
+        
+        }
+        return res.json({location: Loc, sensData: All_User_Sensors, electro: All_User_ElectSensors});
+    }
+} catch (e) {
+    console.log(e);
+}
+});
 
 router.get('/getnumberSensors', verifyToken, async (req, res) => {
     try {
@@ -148,6 +173,21 @@ router.get('/getDeviceByid/:id', verifyToken, async (req, res) => {
     console.log(e);
 }
 });
+router.get('/getAllDevById/:id', verifyToken, async (req, res) => {
+    try {
+    user = await User.findById(req.userId);
+    if (!user) {
+        return res.json({status: "err", message: 'No User Found'});
+    }
+    sens = await Sensor.findOne({_id : req.params.id}).select('-data');
+    if (sens){
+        //console.log('your device: ',sens.data);
+        return res.json(sens);
+    }
+} catch (e) {
+    console.log(e);
+}
+});
 
 router.get('/getSolDeviceByid/:id', verifyToken, async (req, res) => {
     try {
@@ -181,21 +221,7 @@ router.get('/getDevByid/:id', verifyToken, async (req, res) => {
 }
 });
 
-router.get('/getAllDevById/:id', verifyToken, async (req, res) => {
-    try {
-    user = await User.findById(req.userId);
-    if (!user) {
-        return res.json({status: "err", message: 'No User Found'});
-    }
-    sens = await Sensor.findOne({_id : req.params.id}).select('-data');
-    if (sens){
-        //console.log('your device: ',sens.data);
-        return res.json(sens);
-    }
-} catch (e) {
-    console.log(e);
-}
-});
+
 
 
 
