@@ -35,6 +35,31 @@ function verifyToken(req, res, next) {
 router.get('/getSensors', verifyToken, async (req, res) => {
     try {
         All_User_Locations = [];
+        All_User_ElectSensors = [];
+        All_User_Sensors = [];
+        user = await User.findById(req.userId);
+        for (const item of user.Location_ids) {
+            locationss = await Location.findById(item);
+           if (locationss){
+               for (const element of locationss.Sensor_ids) {
+            Sens = await Sensor.findById(element).select("-data");
+            if (Sens) {
+                All_User_Sensors.push(Sens);
+            }
+         
+        }}
+            All_User_Locations.push(locationss);
+        }
+       res.json({status: "ok", Locations: All_User_Locations, Sensors: All_User_Sensors});
+        //res.json({Sensors: All_User_Sensors, Electro: All_User_ElectSensors});
+    } catch (e) {
+        res.json({message: e});
+    }
+});
+router.get('/DevicesHome', verifyToken, async (req, res) => {
+    try {
+        All_User_Locations = [];
+        All_User_ElectSensors = [];
         All_User_Sensors = [];
         user = await User.findById(req.userId);
         for (const item of user.Location_ids) {
@@ -45,12 +70,14 @@ router.get('/getSensors', verifyToken, async (req, res) => {
             if (Sens && Sens.SensorType !== "Relay" ) {
                 All_User_Sensors.push(Sens);
             }
+            if (Sens && Sens.SensorType == "Relay" ) {
+                All_User_ElectSensors.push(Sens);
+            }
         }}
             All_User_Locations.push(locationss);
         }
-        console.log(All_User_Sensors);
        // res.json({status: "ok", Locations: All_User_Locations, Sensors: All_User_Sensors});
-        res.json(All_User_Sensors);
+        res.json({Sensors: All_User_Sensors, Electro: All_User_ElectSensors});
     } catch (e) {
         res.json({message: e});
     }
