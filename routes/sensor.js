@@ -90,8 +90,9 @@ router.get('/getElectroSensors', verifyToken, async (req, res) => {
         All_User_ElectSensors = [];
         All_User_SolSensors = [];
         user = await User.findById(req.userId);
-       
-            locationss = await Location.findOne();
+        for (const item of user.Location_ids) {
+            locationss = await Location.findOne(item);
+            }
            if (locationss){
                for (const element of locationss.Sensor_ids) {
             Sens = await Sensor.findById(element).select("-data");
@@ -104,9 +105,11 @@ router.get('/getElectroSensors', verifyToken, async (req, res) => {
             if (Sens && Sens.SensorType === "CarteDeSol" ) {
                 All_User_SolSensors.push(Sens);
             }
-        }}
+        }
+    }
+
         
-        console.log(All_User_Sensors);
+       // console.log(All_User_Sensors);
         res.json({Locations: locationss, Sensors: All_User_Sensors, Electro: All_User_ElectSensors, Sol: All_User_SolSensors[0]});
         //res.json(All_User_Sensors);
     } catch (e) {
@@ -602,7 +605,6 @@ router.post('/StartProcess', verifyToken, async (req, res) => {
     }
 });
 
-//new kafka
 
 var consumer = new Kafka.SimpleConsumer({
     connectionString: '193.95.76.211:9092',
