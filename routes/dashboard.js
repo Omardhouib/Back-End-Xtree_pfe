@@ -11,6 +11,7 @@ const querystring = require('querystring');
 const socket = require('socket.io');
 const mongoose=require('mongoose');
 const nodemailer = require('nodemailer');
+var bcrypt = require('bcryptjs');
 const fastcsv = require("fast-csv");
 const fs = require("fs");
 var PythonShell = require('python-shell');
@@ -203,10 +204,19 @@ router.get('/profile',verifyToken, async (req , res)=>{
     res.json({status:"ok" , response : {"user" : user ,"locations": All_User_Locations}});
 
 });
-router.post('/UpdateProfile',verifyToken, async (req , res)=>{
+router.get('/getUser',verifyToken, async (req , res)=>{
+    // await new Promise(resolve => setTimeout(resolve, 5000));
     All_User_Locations = [];
     user = await User.findById(req.userId);
-    if (user.password === req.body.password)
+    res.json(user);
+
+});
+
+router.post('/UpdateProfile',verifyToken, async (req , res)=>{
+    try {
+    All_User_Locations = [];
+    user = await User.findById(req.userId);
+    if (bcrypt.compareSync(req.body.password, user.password))
     {
         if (req.body.FirstName.length > 0 && req.body.FirstName !== user.FirstName ) {
             console.log('true');
@@ -222,7 +232,8 @@ router.post('/UpdateProfile',verifyToken, async (req , res)=>{
         }
         if (req.body.newPassword.length > 0 && req.body.newPassword !== user.password ) {
             console.log('true');
-            user.password = req.body.newPassword;
+            var salt = bcrypt.genSaltSync(10);
+            user.password = bcrypt.hashSync(req.body.newPassword, salt);
         }
         if (req.body.smsNotif !== undefined && req.body.smsNotif !== "" && req.body.smsNotif !== user.Notifications.SMS ) {
             console.log('changing sms notif');
@@ -238,7 +249,11 @@ router.post('/UpdateProfile',verifyToken, async (req , res)=>{
         }
         await user.save();
         return res.json({status:"ok" , message : "Profile Updated \n Plz refrech the page" , response : {"user" : user}});
-    } else return res.json({status:"err" , message : "Wrong Password"});
+    } else 
+    return res.json({status:"err" , message : "Wrong Password"});
+} catch (e) {
+    console.log(e.toString());
+}
 });
 //// RelayConfiguration 5465444444444444444444444444444444464654654654654654
 router.post('/ProcessConfiguration',verifyToken, async (req , res)=>{
