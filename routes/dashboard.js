@@ -264,6 +264,7 @@ router.post('/ProcessConfiguration',verifyToken, async (req , res)=>{
         if (!Sens) {
             return res.json({status:"err" , message : "No Sensor Found" });
         }
+        
         console.log('Sensor ',Sens.Rules[Sens.Rules.length -1 ].Status);
         Sens.Rules[Sens.Rules.length -1].Status = req.body.ProcessState;
         await Sens.save();

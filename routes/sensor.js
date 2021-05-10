@@ -91,9 +91,10 @@ router.get('/getElectroSensors', verifyToken, async (req, res) => {
         All_User_SolSensors = [];
         user = await User.findById(req.userId);
         for (const item of user.Location_ids) {
+          //  console.log("herree",req.body.id);
             locationss = await Location.findOne(item);
-            }
-           if (locationss){
+            console.log(locationss);
+           if (locationss){ 
                for (const element of locationss.Sensor_ids) {
             Sens = await Sensor.findById(element).select("-data");
             if(Sens){
@@ -106,12 +107,12 @@ router.get('/getElectroSensors', verifyToken, async (req, res) => {
                 All_User_SolSensors.push(Sens);
             }
         }
-    }
-
-        
-       // console.log(All_User_Sensors);
         res.json({Locations: locationss, Sensors: All_User_Sensors, Electro: All_User_ElectSensors, Sol: All_User_SolSensors[0]});
-        //res.json(All_User_Sensors);
+
+    }
+            //All_User_Locations.push(locationss);
+        }
+
     } catch (e) {
         res.json({message: e});
     }
